@@ -73,3 +73,6 @@ crashlytics-build.properties
 
 /.vsconfig
 /.idea/
+
+/Assets/TextMesh Pro/
+/Assets/TextMesh Pro.meta
