@@ -43,7 +43,7 @@ namespace PuzzleGame
         {
             for (var i = 0; i < _splits.Count; i++)
             {
-                _splits[i].rectTransform.anchoredPosition = _positions[indexes[i]];
+                _splits[indexes[i]].rectTransform.anchoredPosition = _positions[i];
             }
         }
 
