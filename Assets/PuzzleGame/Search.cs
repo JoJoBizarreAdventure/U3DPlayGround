@@ -52,7 +52,7 @@ namespace PuzzleGame
             Column = column;
         }
 
-        protected static int Pair2Index(int r, int c)
+        public static int Pair2Index(int r, int c)
         {
             return r * Column + c;
         }
@@ -62,7 +62,7 @@ namespace PuzzleGame
             return (i / Column, i % Column);
         }
 
-        public virtual bool GetSteps(Queue<Step> steps, State current, string idleKey)
+        public virtual (bool, int) GetSteps(Queue<Step> steps, State current, State idle)
         {
             StateCache.Clear();
             CurrentState.Clear();
@@ -70,10 +70,45 @@ namespace PuzzleGame
 
             CurrentState.Add(current);
 
-            return true;
+            return (true, 0);
         }
 
-        protected bool TryAddState(int lastIdx, State newState, string targetKey)
+        protected class StateBuilder
+        {
+            private readonly List<int> _builder = new();
+            private readonly StringBuilder _sb = new();
+
+            public int this[int i]
+            {
+                get => _builder[i];
+                set => _builder[i] = value;
+            }
+
+            public override string ToString()
+            {
+                _sb.Clear();
+                foreach (var num in _builder)
+                {
+                    _sb.Append(num);
+                }
+
+                return _sb.ToString();
+            }
+
+            public void Reset(List<int> target)
+            {
+                _builder.Clear();
+                _builder.AddRange(target);
+            }
+        }
+    }
+
+    public class BreathFirstSearch : Search
+    {
+        private readonly List<Step> _reverseSteps = new();
+        private readonly StateBuilder _ptr = new();
+
+        private bool TryAddState(int lastIdx, State newState, string targetKey)
         {
             var currentIdx = Pair2Index(newState.EmptyRowIdx, newState.EmptyColumnIdx);
             (newState.Chessboard[lastIdx], newState.Chessboard[currentIdx]) =
@@ -88,22 +123,17 @@ namespace PuzzleGame
             NextState.Add(newState);
             return key == targetKey;
         }
-    }
 
-    public class BreathFirstSearch : Search
-    {
-        private readonly List<Step> _reverseSteps = new();
-        private StringBuilder _ptr = new();
-
-        public override bool GetSteps(Queue<Step> steps, State current, string idleKey)
+        public override (bool, int) GetSteps(Queue<Step> steps, State current, State idle)
         {
             steps.Clear();
 
             var currentKey = current.ToString();
+            var idleKey = idle.ToString();
             if (currentKey == idleKey)
-                return true;
+                return (true, 1);
 
-            base.GetSteps(steps, current, idleKey);
+            base.GetSteps(steps, current, idle);
 
             StateCache.Add(currentKey, null);
             var find = false;
@@ -168,10 +198,9 @@ namespace PuzzleGame
             }
 
             if (!find)
-                return false;
+                return (false, StateCache.Count);
 
-            _ptr.Clear();
-            _ptr.Append(idleKey);
+            _ptr.Reset(idle.Chessboard);
             var ptrStr = idleKey;
             _reverseSteps.Clear();
 
@@ -188,7 +217,226 @@ namespace PuzzleGame
                 steps.Enqueue(_reverseSteps[i]);
             }
 
-            return true;
+            return (true, StateCache.Count);
+        }
+    }
+
+    public class BidirectionalBreathFirstSearch : Search
+    {
+        private readonly Dictionary<string, Step> _reverseStateCache = new();
+        private List<State> _reverseCurrentState = new(), _reverseNextState = new();
+
+        private readonly List<Step> _reverseSteps = new();
+        private readonly StateBuilder _ptr = new();
+
+        private bool TryAddState(int lastIdx, State newState)
+        {
+            var currentIdx = Pair2Index(newState.EmptyRowIdx, newState.EmptyColumnIdx);
+            (newState.Chessboard[lastIdx], newState.Chessboard[currentIdx]) =
+                (newState.Chessboard[currentIdx], newState.Chessboard[lastIdx]);
+            var key = newState.ToString();
+
+            if (StateCache.ContainsKey(key))
+                return false;
+
+            StateCache.Add(key, new Step(lastIdx, currentIdx));
+            NextState.Add(newState);
+
+            return _reverseStateCache.ContainsKey(key);
+        }
+
+        private bool TryAddReverseState(int lastIdx, State newState)
+        {
+            var currentIdx = Pair2Index(newState.EmptyRowIdx, newState.EmptyColumnIdx);
+            (newState.Chessboard[lastIdx], newState.Chessboard[currentIdx]) =
+                (newState.Chessboard[currentIdx], newState.Chessboard[lastIdx]);
+            var key = newState.ToString();
+
+            if (_reverseStateCache.ContainsKey(key))
+                return false;
+
+            _reverseStateCache.Add(key, new Step(lastIdx, currentIdx));
+            _reverseNextState.Add(newState);
+
+            return StateCache.ContainsKey(key);
+        }
+
+
+        public override (bool, int) GetSteps(Queue<Step> steps, State current, State idle)
+        {
+            steps.Clear();
+
+            var currentKey = current.ToString();
+            var idleKey = idle.ToString();
+            if (currentKey == idleKey)
+                return (true, 1);
+
+            base.GetSteps(steps, current, idle);
+
+            StateCache.Add(currentKey, null);
+
+            _reverseStateCache.Clear();
+            _reverseCurrentState.Clear();
+            _reverseNextState.Clear();
+
+            _reverseStateCache.Add(idleKey, null);
+            _reverseCurrentState.Add(idle);
+
+            List<int> bothState = null;
+
+            while (CurrentState.Count > 0 && bothState == null)
+            {
+                foreach (var state in CurrentState)
+                {
+                    var lastIndex = Pair2Index(state.EmptyRowIdx, state.EmptyColumnIdx);
+
+                    if (state.EmptyRowIdx > 0)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx - 1, state.EmptyColumnIdx);
+
+                        if (TryAddState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+
+                    if (state.EmptyRowIdx < Row - 1)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx + 1, state.EmptyColumnIdx);
+
+                        if (TryAddState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+
+                    if (state.EmptyColumnIdx > 0)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx, state.EmptyColumnIdx - 1);
+
+                        if (TryAddState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+
+                    if (state.EmptyColumnIdx < Column - 1)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx, state.EmptyColumnIdx + 1);
+
+                        if (TryAddState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+                }
+
+                (CurrentState, NextState) = (NextState, CurrentState);
+                NextState.Clear();
+
+                if (bothState != null)
+                    break;
+
+                foreach (var state in _reverseCurrentState)
+                {
+                    var lastIndex = Pair2Index(state.EmptyRowIdx, state.EmptyColumnIdx);
+
+                    if (state.EmptyRowIdx > 0)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx - 1, state.EmptyColumnIdx);
+
+                        if (TryAddReverseState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+
+                    if (state.EmptyRowIdx < Row - 1)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx + 1, state.EmptyColumnIdx);
+
+                        if (TryAddReverseState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+
+                    if (state.EmptyColumnIdx > 0)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx, state.EmptyColumnIdx - 1);
+
+                        if (TryAddReverseState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+
+                    if (state.EmptyColumnIdx < Column - 1)
+                    {
+                        var chessboardCopy = new List<int>(state.Chessboard);
+                        var probableNext = new State(chessboardCopy, state.EmptyRowIdx, state.EmptyColumnIdx + 1);
+
+                        if (TryAddReverseState(lastIndex, probableNext))
+                        {
+                            bothState = probableNext.Chessboard;
+                            break;
+                        }
+                    }
+                }
+
+                (_reverseCurrentState, _reverseNextState) = (_reverseNextState, _reverseCurrentState);
+                _reverseNextState.Clear();
+            }
+
+            if (bothState == null)
+            {
+                return (false, StateCache.Count + _reverseStateCache.Count);
+            }
+
+
+            _ptr.Reset(bothState);
+            var ptrStr = _ptr.ToString();
+            _reverseSteps.Clear();
+
+            while (ptrStr != currentKey)
+            {
+                var step = StateCache[ptrStr];
+                _reverseSteps.Add(step);
+                (_ptr[step.EmptyFrom], _ptr[step.EmptyTo]) = (_ptr[step.EmptyTo], _ptr[step.EmptyFrom]);
+                ptrStr = _ptr.ToString();
+            }
+
+            for (var i = _reverseSteps.Count - 1; i >= 0; i--)
+            {
+                steps.Enqueue(_reverseSteps[i]);
+            }
+
+            _ptr.Reset(bothState);
+            ptrStr = _ptr.ToString();
+
+            while (ptrStr != idleKey)
+            {
+                var step = _reverseStateCache[ptrStr];
+                steps.Enqueue(step);
+                (_ptr[step.EmptyFrom], _ptr[step.EmptyTo]) = (_ptr[step.EmptyTo], _ptr[step.EmptyFrom]);
+                ptrStr = _ptr.ToString();
+            }
+
+            return (true, StateCache.Count + _reverseStateCache.Count - 1);
         }
     }
 }

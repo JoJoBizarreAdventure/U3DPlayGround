@@ -250,8 +250,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5dbbf408482418f847e8268c9bbed8d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  row: 3
-  column: 3
+  row: 4
+  column: 4
   cellSize: 200
   origin: {fileID: 2800000, guid: 6bc9d8895e4ee1648ba144e444a9b6c2, type: 3}
 --- !u!1 &1773016316

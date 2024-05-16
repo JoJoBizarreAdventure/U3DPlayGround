@@ -14,8 +14,7 @@ namespace PuzzleGame
     {
         private readonly int _row, _column;
         private readonly PuzzleUI _ui;
-        private readonly List<int> _idle;
-        private readonly string _idleKey;
+        private readonly State _idle;
         private readonly State _current;
 
         public PuzzleControl(int row, int column, PuzzleUI ui)
@@ -24,19 +23,20 @@ namespace PuzzleGame
             _column = column;
             _ui = ui;
             var total = row * column;
-            _idle = new List<int>();
+            var idleBoard = new List<int>();
             var sb = new StringBuilder();
             for (var i = 0; i < total; i++)
             {
-                _idle.Add(i);
+                idleBoard.Add(i);
                 sb.Append(i);
             }
 
-            _idleKey = sb.ToString();
-            _current = new State(_idle, row - 1, column - 1);
+            _idle = new State(idleBoard, row - 1, column - 1);
+            _current = new State(new List<int>(_idle.Chessboard), row - 1, column - 1);
 
             Search.SetSize(row, column);
             _bfs = new BreathFirstSearch();
+            _bbfs = new BidirectionalBreathFirstSearch();
         }
 
         #region Search
@@ -48,14 +48,35 @@ namespace PuzzleGame
         private void BreathFirstSearch()
         {
             var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var find = _bfs.GetSteps(_steps, _current, _idleKey);
 
+            stopwatch.Start();
+            bool find;
+            int states;
+            (find, states) = _bfs.GetSteps(_steps, _current, _idle);
             stopwatch.Stop();
 
             AddLog($"BFS time cost: {stopwatch.Elapsed.ToString()}");
+            AddLog($"BFS states cnt: {states}");
             if (find) return;
             AddLog("BFS no solution");
+        }
+
+        private readonly BidirectionalBreathFirstSearch _bbfs;
+
+        private void BidirectionalBreathFirstSearch()
+        {
+            var stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+            bool find;
+            int states;
+            (find, states) = _bbfs.GetSteps(_steps, _current, _idle);
+            stopwatch.Stop();
+
+            AddLog($"B-BFS time cost: {stopwatch.Elapsed.ToString()}");
+            AddLog($"B-BFS states cnt: {states}");
+            if (find) return;
+            AddLog("B-BFS no solution");
         }
 
         #endregion
@@ -99,15 +120,15 @@ namespace PuzzleGame
             hintTextObject.transform.SetParent(buttonObject.transform);
             var text = hintTextObject.AddComponent<TextMeshProUGUI>();
             text.text = buttonName;
-            text.fontSize = 50;
+            text.fontSize = 30;
             text.color = Color.black;
             text.alignment = TextAlignmentOptions.Center;
             text.fontStyle = FontStyles.Bold;
             text.autoSizeTextContainer = true;
 
             var rectTransform = buttonObject.GetComponent<RectTransform>();
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 500);
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 100);
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400);
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
             rectTransform.anchoredPosition = Vector2.zero;
 
             var button = buttonObject.AddComponent<Button>();
@@ -133,9 +154,10 @@ namespace PuzzleGame
 
             CreateButton(verticalLayoutGroupGameObject, "Reset", () =>
             {
-                _current.Chessboard = _idle;
-                _current.EmptyRowIdx = _row - 1;
-                _current.EmptyColumnIdx = _column - 1;
+                _current.Chessboard.Clear();
+                _current.Chessboard.AddRange(_idle.Chessboard);
+                _current.EmptyRowIdx = _idle.EmptyRowIdx;
+                _current.EmptyColumnIdx = _idle.EmptyColumnIdx;
 
                 _ui.ApplyIndexes(_current.Chessboard);
             });
@@ -148,7 +170,68 @@ namespace PuzzleGame
                 _current.EmptyColumnIdx = emptyIdx % _column;
                 _ui.ApplyIndexes(_current.Chessboard);
             });
+            CreateButton(verticalLayoutGroupGameObject, "10 Step Shuffle", () =>
+            {
+                for (var i = 0; i < 10;)
+                {
+                    var op = System.Convert.ToInt32(Random.value * 3.99);
+                    switch (op)
+                    {
+                        case 0 when _current.EmptyRowIdx > 0:
+                        {
+                            var lastIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+                            _current.EmptyRowIdx--;
+                            var currentIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+
+                            (_current.Chessboard[lastIdx], _current.Chessboard[currentIdx]) = (
+                                _current.Chessboard[currentIdx], _current.Chessboard[lastIdx]);
+
+                            i++;
+                            break;
+                        }
+                        case 1 when _current.EmptyRowIdx < _row - 1:
+                        {
+                            var lastIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+                            _current.EmptyRowIdx++;
+                            var currentIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+
+                            (_current.Chessboard[lastIdx], _current.Chessboard[currentIdx]) = (
+                                _current.Chessboard[currentIdx], _current.Chessboard[lastIdx]);
+
+                            i++;
+                            break;
+                        }
+                        case 2 when _current.EmptyColumnIdx > 0:
+                        {
+                            var lastIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+                            _current.EmptyColumnIdx--;
+                            var currentIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+
+                            (_current.Chessboard[lastIdx], _current.Chessboard[currentIdx]) = (
+                                _current.Chessboard[currentIdx], _current.Chessboard[lastIdx]);
+
+                            i++;
+                            break;
+                        }
+                        case 3 when _current.EmptyColumnIdx < _column - 1:
+                        {
+                            var lastIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+                            _current.EmptyColumnIdx++;
+                            var currentIdx = Search.Pair2Index(_current.EmptyRowIdx, _current.EmptyColumnIdx);
+
+                            (_current.Chessboard[lastIdx], _current.Chessboard[currentIdx]) = (
+                                _current.Chessboard[currentIdx], _current.Chessboard[lastIdx]);
+
+                            i++;
+                            break;
+                        }
+                    }
+                }
+
+                _ui.ApplyIndexes(_current.Chessboard);
+            });
             CreateButton(verticalLayoutGroupGameObject, "BFS", BreathFirstSearch);
+            CreateButton(verticalLayoutGroupGameObject, "BidirectionalBFS", BidirectionalBreathFirstSearch);
             CreateButton(verticalLayoutGroupGameObject, "OneStep", () =>
             {
                 if (_steps.Count == 0)
