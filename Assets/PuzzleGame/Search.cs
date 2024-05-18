@@ -32,7 +32,7 @@ namespace PuzzleGame
             var sb = new StringBuilder();
             foreach (var idx in Chessboard)
             {
-                sb.Append(idx);
+                sb.Append(idx).Append('\'');
             }
 
             return sb.ToString();
@@ -89,7 +89,7 @@ namespace PuzzleGame
                 _sb.Clear();
                 foreach (var num in _builder)
                 {
-                    _sb.Append(num);
+                    _sb.Append(num).Append('\'');
                 }
 
                 return _sb.ToString();
