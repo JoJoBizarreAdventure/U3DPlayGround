@@ -161,18 +161,9 @@ namespace PuzzleGame
 
                 _ui.ApplyIndexes(_current.Chessboard);
             });
-            CreateButton(verticalLayoutGroupGameObject, "Random", () =>
+            CreateButton(verticalLayoutGroupGameObject, "Shuffle", () =>
             {
-                _current.Chessboard = _current.Chessboard.OrderBy(_ => Random.value).ToList();
-
-                var emptyIdx = _current.Chessboard.IndexOf(_current.Chessboard.Count - 1);
-                _current.EmptyRowIdx = emptyIdx / _column;
-                _current.EmptyColumnIdx = emptyIdx % _column;
-                _ui.ApplyIndexes(_current.Chessboard);
-            });
-            CreateButton(verticalLayoutGroupGameObject, "10 Step Shuffle", () =>
-            {
-                for (var i = 0; i < 10;)
+                for (var i = 0; i < 10 * _row * _column;)
                 {
                     var op = System.Convert.ToInt32(Random.value * 3.99);
                     switch (op)
