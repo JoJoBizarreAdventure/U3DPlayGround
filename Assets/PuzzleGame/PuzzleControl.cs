@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -35,15 +34,13 @@ namespace PuzzleGame
             _current = new State(new List<int>(_idle.Chessboard), row - 1, column - 1);
 
             Search.SetSize(row, column);
-            _bfs = new BreathFirstSearch();
-            _bbfs = new BidirectionalBreathFirstSearch();
         }
 
         #region Search
 
         private readonly Queue<Step> _steps = new();
 
-        private readonly BreathFirstSearch _bfs;
+        private readonly BreathFirstSearch _bfs = new();
 
         private void BreathFirstSearch()
         {
@@ -61,7 +58,7 @@ namespace PuzzleGame
             AddLog("BFS no solution");
         }
 
-        private readonly BidirectionalBreathFirstSearch _bbfs;
+        private readonly BidirectionalBreathFirstSearch _bbfs = new();
 
         private void BidirectionalBreathFirstSearch()
         {
@@ -77,6 +74,24 @@ namespace PuzzleGame
             AddLog($"B-BFS states cnt: {states}");
             if (find) return;
             AddLog("B-BFS no solution");
+        }
+
+        private readonly AStarSearch _ass = new();
+
+        private void AStarSearch()
+        {
+            var stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+            bool find;
+            int states;
+            (find, states) = _ass.GetSteps(_steps, _current, _idle);
+            stopwatch.Stop();
+
+            AddLog($"AStar time cost: {stopwatch.Elapsed.ToString()}");
+            AddLog($"AStar states cnt: {states}");
+            if (find) return;
+            AddLog("AStar no solution");
         }
 
         #endregion
@@ -163,7 +178,7 @@ namespace PuzzleGame
             });
             CreateButton(verticalLayoutGroupGameObject, "Shuffle", () =>
             {
-                for (var i = 0; i < 10 * _row * _column;)
+                for (var i = 0; i < 2 * _row * _column;)
                 {
                     var op = System.Convert.ToInt32(Random.value * 3.99);
                     switch (op)
@@ -223,6 +238,7 @@ namespace PuzzleGame
             });
             CreateButton(verticalLayoutGroupGameObject, "BFS", BreathFirstSearch);
             CreateButton(verticalLayoutGroupGameObject, "BidirectionalBFS", BidirectionalBreathFirstSearch);
+            CreateButton(verticalLayoutGroupGameObject, "AStarSearch", AStarSearch);
             CreateButton(verticalLayoutGroupGameObject, "OneStep", () =>
             {
                 if (_steps.Count == 0)

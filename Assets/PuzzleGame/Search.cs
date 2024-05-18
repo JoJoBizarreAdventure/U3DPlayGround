@@ -17,7 +17,7 @@ namespace PuzzleGame
 
     public class State
     {
-        public List<int> Chessboard;
+        public readonly List<int> Chessboard;
         public int EmptyRowIdx, EmptyColumnIdx;
 
         public State(List<int> chessboard, int r, int c)

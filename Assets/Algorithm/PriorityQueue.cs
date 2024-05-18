@@ -23,12 +23,11 @@ namespace Algorithm
             }
         }
 
-        private int _nodeCnt;
         private Node _top;
 
         public void Enqueue(TKey key, TValue value)
         {
-            _nodeCnt++;
+            Count++;
             var newNode = new Node(key, value);
             if (_top == null)
             {
@@ -37,15 +36,15 @@ namespace Algorithm
             }
 
             var nodePtr = _top;
-            var digitCnt = (int)Math.Floor(Math.Log(_nodeCnt, 2)) - 1;
+            var digitCnt = (int)Math.Floor(Math.Log(Count, 2)) - 1;
             var posPtr = 1 << digitCnt;
             while (posPtr > 1)
             {
-                nodePtr = (_nodeCnt & posPtr) > 0 ? nodePtr.Right : nodePtr.Left;
+                nodePtr = (Count & posPtr) > 0 ? nodePtr.Right : nodePtr.Left;
                 posPtr >>= 1;
             }
 
-            if (_nodeCnt % 2 == 0)
+            if (Count % 2 == 0)
             {
                 nodePtr.SetLeft(newNode);
             }
@@ -62,31 +61,33 @@ namespace Algorithm
             }
         }
 
-        public void Dequeue()
+        public Node Dequeue()
         {
             if (_top == null)
-                return;
+                return null;
 
-            if (_nodeCnt == 1)
+            Node ret;
+            if (Count == 1)
             {
+                ret = _top;
                 _top = null;
-                _nodeCnt = 0;
-                return;
+                Count = 0;
+                return ret;
             }
 
             var nodePtr = _top;
-            var digitCnt = (int)Math.Floor(Math.Log(_nodeCnt, 2)) - 1;
+            var digitCnt = (int)Math.Floor(Math.Log(Count, 2)) - 1;
             var posPtr = 1 << digitCnt;
 
             while (posPtr > 0)
             {
-                nodePtr = (_nodeCnt & posPtr) > 0 ? nodePtr.Right : nodePtr.Left;
+                nodePtr = (Count & posPtr) > 0 ? nodePtr.Right : nodePtr.Left;
                 posPtr >>= 1;
             }
 
             _top.Swap(nodePtr);
 
-            if (_nodeCnt % 2 == 0)
+            if (Count % 2 == 0)
             {
                 nodePtr.Parent.Left = null;
             }
@@ -94,8 +95,12 @@ namespace Algorithm
             {
                 nodePtr.Parent.Right = null;
             }
-            
-            _nodeCnt--;
+
+            nodePtr.Parent = null;
+
+            ret = nodePtr;
+
+            Count--;
 
             nodePtr = _top;
             while (nodePtr.Left != null)
@@ -114,11 +119,16 @@ namespace Algorithm
                     nodePtr = nodePtr.Right;
                 }
             }
+
+            return ret;
         }
 
-        public Node GetTop()
+        public int Count { get; private set; }
+
+        public void Clear()
         {
-            return _top;
+            Count = 0;
+            _top = null;
         }
     }
 }
