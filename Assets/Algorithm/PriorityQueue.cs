@@ -3,16 +3,16 @@ using DataStructure;
 
 namespace Algorithm
 {
-    public class PriorityQueue<TKey, TValue> where TKey : IComparable<TKey>
+    public class PriorityQueue<TKey> where TKey : IComparable<TKey>
     {
         private Node _top;
 
         public int Count { get; private set; }
 
-        public void Enqueue(TKey key, TValue value)
+        public void Enqueue(TKey key)
         {
             Count++;
-            var newNode = new Node(key, value);
+            var newNode = new Node(key);
             if (_top == null)
             {
                 _top = newNode;
@@ -34,11 +34,10 @@ namespace Algorithm
                 nodePtr.SetRight(newNode);
 
             nodePtr = newNode;
-            while (nodePtr != _top && nodePtr.Key.CompareTo(nodePtr.Parent.Key) < 0)
-            {
-                nodePtr.Swap(nodePtr.Parent);
-                nodePtr = nodePtr.Parent;
-            }
+            while (nodePtr.Parent != null && nodePtr.Key.CompareTo(nodePtr.Parent.Key) < 0)
+                Node.Swap(nodePtr, nodePtr.Parent);
+
+            while (_top.Parent != null) _top = _top.Parent;
         }
 
         public Node Dequeue()
@@ -65,35 +64,34 @@ namespace Algorithm
                 posPtr >>= 1;
             }
 
-            _top.Swap(nodePtr);
+            Node.Swap(_top, nodePtr);
 
             if (Count % 2 == 0)
-                nodePtr.Parent.Left = null;
+                _top.Parent.Left = null;
             else
-                nodePtr.Parent.Right = null;
+                _top.Parent.Right = null;
 
-            nodePtr.Parent = null;
+            _top.Parent = null;
 
-            ret = nodePtr;
+            ret = _top;
+            _top = nodePtr;
 
             Count--;
 
-            nodePtr = _top;
             while (nodePtr.Left != null)
                 if (nodePtr.Left.Key.CompareTo(nodePtr.Key) < 0)
                 {
-                    nodePtr.Swap(nodePtr.Left);
-                    nodePtr = nodePtr.Left;
+                    Node.Swap(nodePtr, nodePtr.Left);
                 }
                 else
                 {
                     if (nodePtr.Right == null || nodePtr.Right.Key.CompareTo(nodePtr.Key) >= 0)
                         break;
 
-                    nodePtr.Swap(nodePtr.Right);
-                    nodePtr = nodePtr.Right;
+                    Node.Swap(nodePtr, nodePtr.Right);
                 }
 
+            while (_top.Parent != null) _top = _top.Parent;
             return ret;
         }
 
@@ -106,18 +104,91 @@ namespace Algorithm
         public class Node : BinaryTreeNode<Node>
         {
             public TKey Key;
-            public TValue Value;
 
-            public Node(TKey key, TValue value)
+            public Node(TKey key)
             {
                 Key = key;
-                Value = value;
             }
 
-            public void Swap(Node node)
+            public static void Swap(Node node1, Node node2)
             {
-                (Key, node.Key) = (node.Key, Key);
-                (Value, node.Value) = (node.Value, Value);
+                if (node1 == null || node2 == null)
+                    return;
+
+                if (node1.Parent == node2) (node1, node2) = (node2, node1);
+
+                if (node2.Parent == node1)
+                {
+                    if (node1.Parent != null)
+                    {
+                        if (node1.Parent.Left == node1)
+                            node1.Parent.SetLeft(node2);
+                        else
+                            node1.Parent.SetRight(node2);
+                    }
+                    else
+                    {
+                        node2.Parent = null;
+                    }
+
+                    Node left2 = node2.Left, right2 = node2.Right;
+                    if (node1.Left == node2)
+                    {
+                        node2.SetLeft(node1);
+                        node2.SetRight(node1.Right);
+                    }
+                    else
+                    {
+                        node2.SetLeft(node1.Left);
+                        node2.SetRight(node1);
+                    }
+
+                    node1.SetLeft(left2);
+                    node1.SetRight(right2);
+                }
+                else
+                {
+                    Node left1 = node1.Left, right1 = node1.Right;
+
+                    node1.SetLeft(node2.Left);
+                    node1.SetRight(node2.Right);
+
+                    node2.SetLeft(left1);
+                    node2.SetRight(right1);
+
+                    if (node1.Parent == null)
+                    {
+                        if (node2.Parent.Left == node2)
+                            node2.Parent.SetLeft(node1);
+                        else
+                            node2.Parent.SetRight(node1);
+
+                        node2.Parent = null;
+                    }
+                    else if (node2.Parent == null)
+                    {
+                        if (node1.Parent.Left == node1)
+                            node1.Parent.SetLeft(node2);
+                        else
+                            node1.Parent.SetRight(node2);
+
+                        node1.Parent = null;
+                    }
+                    else
+                    {
+                        var parent1 = node1.Parent;
+
+                        if (node2.Parent.Left == node2)
+                            node2.Parent.SetLeft(node1);
+                        else
+                            node2.Parent.SetRight(node1);
+
+                        if (parent1.Left == node1)
+                            parent1.SetLeft(node2);
+                        else
+                            parent1.SetRight(node2);
+                    }
+                }
             }
         }
     }

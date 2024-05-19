@@ -10,14 +10,14 @@ namespace PuzzleGame
         private readonly StateBuilder _ptr = new();
         private readonly List<Step> _reverseSteps = new();
 
-        private readonly PriorityQueue<StateKey, State> _stateQueue = new();
+        private readonly PriorityQueue<StateKey> _stateQueue = new();
 
         private static int EvaluateStateH(State state)
         {
             var h = 0;
             var index = 0;
             for (var r = 0; r < Row; r++)
-            for (var c = 0; c < Column; c++)
+            for (var c = 0; c < Column; c++, index++)
             {
                 if (r == state.EmptyRowIdx && c == state.EmptyColumnIdx)
                     continue;
@@ -26,8 +26,6 @@ namespace PuzzleGame
                 var targetColumn = state.Chessboard[index] % Column;
 
                 h += Math.Abs(targetRow - r) + Math.Abs(targetColumn - c);
-
-                index++;
             }
 
             return h;
@@ -46,7 +44,7 @@ namespace PuzzleGame
             StateCache[key] = new Step(lastIdx, currentIdx);
             _gnCache[key] = gn;
             var hn = EvaluateStateH(newState);
-            _stateQueue.Enqueue(new StateKey(hn * 10, gn), newState);
+            _stateQueue.Enqueue(new StateKey(hn * 10, gn, newState));
             return key == targetKey;
         }
 
@@ -60,15 +58,16 @@ namespace PuzzleGame
                 return (true, 1);
 
             _stateQueue.Clear();
-            _stateQueue.Enqueue(new StateKey(0, 0), current);
+            _stateQueue.Enqueue(new StateKey(0, 0, current));
             StateCache.Clear();
             StateCache.Add(currentKey, null);
+            _gnCache.Clear();
             _gnCache.Add(currentKey, 0);
 
             while (_stateQueue.Count > 0)
             {
                 var lastNode = _stateQueue.Dequeue();
-                var state = lastNode.Value;
+                var state = lastNode.Key.State;
                 var gn = lastNode.Key.Gn + 1;
                 var lastIndex = Pair2Index(state.EmptyRowIdx, state.EmptyColumnIdx);
 
@@ -128,16 +127,18 @@ namespace PuzzleGame
         {
             public readonly int Gn;
             private readonly int _hn;
+            public readonly State State;
 
             public int CompareTo(StateKey other)
             {
                 return Gn + _hn - other.Gn - other._hn;
             }
 
-            public StateKey(int h, int g)
+            public StateKey(int h, int g, State state)
             {
                 _hn = h;
                 Gn = g;
+                State = state;
             }
         }
     }

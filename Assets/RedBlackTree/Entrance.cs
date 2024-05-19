@@ -10,13 +10,13 @@ namespace RedBlackTree
         private void Start()
         {
             _scsf = GetComponent<ScrollContentSizeFilter>();
-            
+
             var obj1 = Instantiate(treeNodePrefab, gameObject.transform);
-            
-            var obj2 =  Instantiate(treeNodePrefab, gameObject.transform);
+
+            var obj2 = Instantiate(treeNodePrefab, gameObject.transform);
             var rect = obj2.GetComponent<RectTransform>();
-            rect.anchoredPosition = new Vector2(2000,-2000);
-            
+            rect.anchoredPosition = new Vector2(2000, -2000);
+
             _scsf.Resize();
         }
     }

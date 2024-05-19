@@ -246,6 +246,8 @@ namespace PuzzleGame
                 var step = _steps.Dequeue();
                 (_current.Chessboard[step.EmptyFrom], _current.Chessboard[step.EmptyTo]) =
                     (_current.Chessboard[step.EmptyTo], _current.Chessboard[step.EmptyFrom]);
+                (_current.EmptyRowIdx, _current.EmptyColumnIdx) = Search.Index2Pair(step.EmptyTo);
+
                 _ui.ApplyIndexes(_current.Chessboard);
                 AddLog($"One Step: Swap {Search.Index2Pair(step.EmptyFrom)} and {Search.Index2Pair(step.EmptyTo)}");
                 if (_steps.Count == 0) AddLog("One Step: All Steps Complete");
