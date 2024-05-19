@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using TMPro;
@@ -11,10 +12,10 @@ namespace PuzzleGame
 {
     public class PuzzleControl
     {
+        private readonly State _current;
+        private readonly State _idle;
         private readonly int _row, _column;
         private readonly PuzzleUI _ui;
-        private readonly State _idle;
-        private readonly State _current;
 
         public PuzzleControl(int row, int column, PuzzleUI ui)
         {
@@ -105,16 +106,10 @@ namespace PuzzleGame
         {
             _logCache.Enqueue(logText);
 
-            while (_logCache.Count >= 9)
-            {
-                _logCache.Dequeue();
-            }
+            while (_logCache.Count >= 9) _logCache.Dequeue();
 
             var sb = new StringBuilder();
-            foreach (var line in _logCache)
-            {
-                sb.Append(line).Append('\n');
-            }
+            foreach (var line in _logCache) sb.Append(line).Append('\n');
 
             _logText.text = sb.ToString();
         }
@@ -180,7 +175,7 @@ namespace PuzzleGame
             {
                 for (var i = 0; i < 2 * _row * _column;)
                 {
-                    var op = System.Convert.ToInt32(Random.value * 3.99);
+                    var op = Convert.ToInt32(Random.value * 3.99);
                     switch (op)
                     {
                         case 0 when _current.EmptyRowIdx > 0:
@@ -243,7 +238,7 @@ namespace PuzzleGame
             {
                 if (_steps.Count == 0)
                 {
-                    AddLog($"One Step: Empty Steps");
+                    AddLog("One Step: Empty Steps");
                     return;
                 }
 
@@ -253,10 +248,7 @@ namespace PuzzleGame
                     (_current.Chessboard[step.EmptyTo], _current.Chessboard[step.EmptyFrom]);
                 _ui.ApplyIndexes(_current.Chessboard);
                 AddLog($"One Step: Swap {Search.Index2Pair(step.EmptyFrom)} and {Search.Index2Pair(step.EmptyTo)}");
-                if (_steps.Count == 0)
-                {
-                    AddLog($"One Step: All Steps Complete");
-                }
+                if (_steps.Count == 0) AddLog("One Step: All Steps Complete");
             });
 
             var logBgImageObject = new GameObject("LogBg");

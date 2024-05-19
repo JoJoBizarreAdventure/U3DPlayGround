@@ -6,8 +6,12 @@ namespace PuzzleGame
 {
     public class PuzzleUI
     {
-        private readonly int _row, _column, _cellSize;
         private readonly Texture _origin;
+
+        private readonly List<Vector2> _positions = new();
+        private readonly int _row, _column, _cellSize;
+
+        private readonly List<RawImage> _splits = new();
 
         public PuzzleUI(int row, int column, int cellSize, Texture origin)
         {
@@ -16,8 +20,6 @@ namespace PuzzleGame
             _cellSize = cellSize;
             _origin = origin;
         }
-
-        private readonly List<RawImage> _splits = new();
 
         private void CreateChild(GameObject parent, int c, int r)
         {
@@ -37,14 +39,9 @@ namespace PuzzleGame
             _splits.Add(split);
         }
 
-        private readonly List<Vector2> _positions = new();
-
         public void ApplyIndexes(List<int> indexes)
         {
-            for (var i = 0; i < _splits.Count; i++)
-            {
-                _splits[indexes[i]].rectTransform.anchoredPosition = _positions[i];
-            }
+            for (var i = 0; i < _splits.Count; i++) _splits[indexes[i]].rectTransform.anchoredPosition = _positions[i];
         }
 
         public void CreateGrid(GameObject parent)
@@ -59,21 +56,13 @@ namespace PuzzleGame
             var startY = totalHeight / 2.0f;
 
             for (var r = 0; r < _row; r++)
-            {
-                for (var c = 0; c < _column; c++)
-                {
-                    _positions.Add(
-                        new Vector2(startX + c * (_cellSize + spaceSize), startY - r * (_cellSize + spaceSize)));
-                }
-            }
+            for (var c = 0; c < _column; c++)
+                _positions.Add(
+                    new Vector2(startX + c * (_cellSize + spaceSize), startY - r * (_cellSize + spaceSize)));
 
             for (var r = 0; r < _row; r++)
-            {
-                for (var c = 0; c < _column; c++)
-                {
-                    CreateChild(gridLayoutGroupGameObject, c, r);
-                }
-            }
+            for (var c = 0; c < _column; c++)
+                CreateChild(gridLayoutGroupGameObject, c, r);
 
             _splits[^1].uvRect = new Rect(0, 0, 0, 0);
 
@@ -82,10 +71,7 @@ namespace PuzzleGame
             rectTransform.anchoredPosition = new Vector2(-0.2f * parentWidth, 0);
 
             var defaultIndexes = new List<int>();
-            for (var i = 0; i < _splits.Count; i++)
-            {
-                defaultIndexes.Add(i);
-            }
+            for (var i = 0; i < _splits.Count; i++) defaultIndexes.Add(i);
 
             ApplyIndexes(defaultIndexes);
         }

@@ -6,45 +6,27 @@ namespace PuzzleGame
 {
     public class AStarSearch : Search
     {
-        private readonly struct StateKey : IComparable<StateKey>
-        {
-            public readonly int Gn;
-            private readonly int _hn;
-
-            public int CompareTo(StateKey other)
-            {
-                return Gn + _hn - other.Gn - other._hn;
-            }
-
-            public StateKey(int h, int g)
-            {
-                _hn = h;
-                Gn = g;
-            }
-        }
-
-        private readonly PriorityQueue<StateKey, State> _stateQueue = new();
         private readonly StateBuilder _ptr = new();
         private readonly List<Step> _reverseSteps = new();
+
+        private readonly PriorityQueue<StateKey, State> _stateQueue = new();
 
         private static int EvaluateStateH(State state)
         {
             var h = 0;
             var index = 0;
             for (var r = 0; r < Row; r++)
+            for (var c = 0; c < Column; c++)
             {
-                for (var c = 0; c < Column; c++)
-                {
-                    if (r == state.EmptyRowIdx && c == state.EmptyColumnIdx)
-                        continue;
+                if (r == state.EmptyRowIdx && c == state.EmptyColumnIdx)
+                    continue;
 
-                    var targetRow = state.Chessboard[index] / Column;
-                    var targetColumn = state.Chessboard[index] % Column;
+                var targetRow = state.Chessboard[index] / Column;
+                var targetColumn = state.Chessboard[index] % Column;
 
-                    h += Math.Abs(targetRow - r) + Math.Abs(targetColumn - c);
+                h += Math.Abs(targetRow - r) + Math.Abs(targetColumn - c);
 
-                    index++;
-                }
+                index++;
             }
 
             return h;
@@ -92,10 +74,7 @@ namespace PuzzleGame
                     var chessboardCopy = new List<int>(state.Chessboard);
                     var probableNext = new State(chessboardCopy, state.EmptyRowIdx - 1, state.EmptyColumnIdx);
 
-                    if (TryAddState(lastIndex, gn, probableNext, idleKey))
-                    {
-                        break;
-                    }
+                    if (TryAddState(lastIndex, gn, probableNext, idleKey)) break;
                 }
 
                 if (state.EmptyRowIdx < Row - 1)
@@ -103,10 +82,7 @@ namespace PuzzleGame
                     var chessboardCopy = new List<int>(state.Chessboard);
                     var probableNext = new State(chessboardCopy, state.EmptyRowIdx + 1, state.EmptyColumnIdx);
 
-                    if (TryAddState(lastIndex, gn, probableNext, idleKey))
-                    {
-                        break;
-                    }
+                    if (TryAddState(lastIndex, gn, probableNext, idleKey)) break;
                 }
 
                 if (state.EmptyColumnIdx > 0)
@@ -114,10 +90,7 @@ namespace PuzzleGame
                     var chessboardCopy = new List<int>(state.Chessboard);
                     var probableNext = new State(chessboardCopy, state.EmptyRowIdx, state.EmptyColumnIdx - 1);
 
-                    if (TryAddState(lastIndex, gn, probableNext, idleKey))
-                    {
-                        break;
-                    }
+                    if (TryAddState(lastIndex, gn, probableNext, idleKey)) break;
                 }
 
                 if (state.EmptyColumnIdx < Column - 1)
@@ -125,17 +98,11 @@ namespace PuzzleGame
                     var chessboardCopy = new List<int>(state.Chessboard);
                     var probableNext = new State(chessboardCopy, state.EmptyRowIdx, state.EmptyColumnIdx + 1);
 
-                    if (TryAddState(lastIndex, gn, probableNext, idleKey))
-                    {
-                        break;
-                    }
+                    if (TryAddState(lastIndex, gn, probableNext, idleKey)) break;
                 }
             }
 
-            if (!StateCache.ContainsKey(idleKey))
-            {
-                return (false, StateCache.Count);
-            }
+            if (!StateCache.ContainsKey(idleKey)) return (false, StateCache.Count);
 
             _ptr.Reset(idle.Chessboard);
             var ptrStr = idleKey;
@@ -149,12 +116,26 @@ namespace PuzzleGame
                 ptrStr = _ptr.ToString();
             }
 
-            for (var i = _reverseSteps.Count - 1; i >= 0; i--)
-            {
-                steps.Enqueue(_reverseSteps[i]);
-            }
+            for (var i = _reverseSteps.Count - 1; i >= 0; i--) steps.Enqueue(_reverseSteps[i]);
 
             return (true, StateCache.Count);
+        }
+
+        private readonly struct StateKey : IComparable<StateKey>
+        {
+            public readonly int Gn;
+            private readonly int _hn;
+
+            public int CompareTo(StateKey other)
+            {
+                return Gn + _hn - other.Gn - other._hn;
+            }
+
+            public StateKey(int h, int g)
+            {
+                _hn = h;
+                Gn = g;
+            }
         }
     }
 }

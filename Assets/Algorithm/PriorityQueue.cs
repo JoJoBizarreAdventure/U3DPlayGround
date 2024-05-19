@@ -5,25 +5,9 @@ namespace Algorithm
 {
     public class PriorityQueue<TKey, TValue> where TKey : IComparable<TKey>
     {
-        public class Node : BinaryTreeNode<Node>
-        {
-            public TKey Key;
-            public TValue Value;
-
-            public Node(TKey key, TValue value)
-            {
-                Key = key;
-                Value = value;
-            }
-
-            public void Swap(Node node)
-            {
-                (Key, node.Key) = (node.Key, Key);
-                (Value, node.Value) = (node.Value, Value);
-            }
-        }
-
         private Node _top;
+
+        public int Count { get; private set; }
 
         public void Enqueue(TKey key, TValue value)
         {
@@ -45,13 +29,9 @@ namespace Algorithm
             }
 
             if (Count % 2 == 0)
-            {
                 nodePtr.SetLeft(newNode);
-            }
             else
-            {
                 nodePtr.SetRight(newNode);
-            }
 
             nodePtr = newNode;
             while (nodePtr != _top && nodePtr.Key.CompareTo(nodePtr.Parent.Key) < 0)
@@ -88,13 +68,9 @@ namespace Algorithm
             _top.Swap(nodePtr);
 
             if (Count % 2 == 0)
-            {
                 nodePtr.Parent.Left = null;
-            }
             else
-            {
                 nodePtr.Parent.Right = null;
-            }
 
             nodePtr.Parent = null;
 
@@ -104,7 +80,6 @@ namespace Algorithm
 
             nodePtr = _top;
             while (nodePtr.Left != null)
-            {
                 if (nodePtr.Left.Key.CompareTo(nodePtr.Key) < 0)
                 {
                     nodePtr.Swap(nodePtr.Left);
@@ -118,17 +93,32 @@ namespace Algorithm
                     nodePtr.Swap(nodePtr.Right);
                     nodePtr = nodePtr.Right;
                 }
-            }
 
             return ret;
         }
-
-        public int Count { get; private set; }
 
         public void Clear()
         {
             Count = 0;
             _top = null;
+        }
+
+        public class Node : BinaryTreeNode<Node>
+        {
+            public TKey Key;
+            public TValue Value;
+
+            public Node(TKey key, TValue value)
+            {
+                Key = key;
+                Value = value;
+            }
+
+            public void Swap(Node node)
+            {
+                (Key, node.Key) = (node.Key, Key);
+                (Value, node.Value) = (node.Value, Value);
+            }
         }
     }
 }

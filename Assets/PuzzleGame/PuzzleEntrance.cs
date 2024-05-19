@@ -7,9 +7,9 @@ namespace PuzzleGame
         public int row, column, cellSize;
 
         public Texture origin;
+        private PuzzleControl _control;
 
         private PuzzleUI _ui;
-        private PuzzleControl _control;
 
         private void Start()
         {

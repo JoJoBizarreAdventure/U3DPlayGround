@@ -30,10 +30,7 @@ namespace PuzzleGame
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var idx in Chessboard)
-            {
-                sb.Append(idx).Append('\'');
-            }
+            foreach (var idx in Chessboard) sb.Append(idx).Append('\'');
 
             return sb.ToString();
         }
@@ -41,10 +38,9 @@ namespace PuzzleGame
 
     public abstract class Search
     {
+        protected static int Row, Column;
         protected readonly Dictionary<string, Step> StateCache = new();
         protected List<State> CurrentState = new(), NextState = new();
-
-        protected static int Row, Column;
 
         public static void SetSize(int row, int column)
         {
@@ -87,10 +83,7 @@ namespace PuzzleGame
             public override string ToString()
             {
                 _sb.Clear();
-                foreach (var num in _builder)
-                {
-                    _sb.Append(num).Append('\'');
-                }
+                foreach (var num in _builder) _sb.Append(num).Append('\'');
 
                 return _sb.ToString();
             }

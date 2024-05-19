@@ -4,11 +4,11 @@ namespace PuzzleGame
 {
     public class BidirectionalBreathFirstSearch : Search
     {
+        private readonly StateBuilder _ptr = new();
         private readonly Dictionary<string, Step> _reverseStateCache = new();
-        private List<State> _reverseCurrentState = new(), _reverseNextState = new();
 
         private readonly List<Step> _reverseSteps = new();
-        private readonly StateBuilder _ptr = new();
+        private List<State> _reverseCurrentState = new(), _reverseNextState = new();
 
         private bool TryAddState(int lastIdx, State newState)
         {
@@ -183,10 +183,7 @@ namespace PuzzleGame
                 _reverseNextState.Clear();
             }
 
-            if (bothState == null)
-            {
-                return (false, StateCache.Count + _reverseStateCache.Count);
-            }
+            if (bothState == null) return (false, StateCache.Count + _reverseStateCache.Count);
 
 
             _ptr.Reset(bothState);
@@ -201,10 +198,7 @@ namespace PuzzleGame
                 ptrStr = _ptr.ToString();
             }
 
-            for (var i = _reverseSteps.Count - 1; i >= 0; i--)
-            {
-                steps.Enqueue(_reverseSteps[i]);
-            }
+            for (var i = _reverseSteps.Count - 1; i >= 0; i--) steps.Enqueue(_reverseSteps[i]);
 
             _ptr.Reset(bothState);
             ptrStr = _ptr.ToString();

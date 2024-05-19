@@ -4,8 +4,8 @@ namespace PuzzleGame
 {
     public class BreathFirstSearch : Search
     {
-        private readonly List<Step> _reverseSteps = new();
         private readonly StateBuilder _ptr = new();
+        private readonly List<Step> _reverseSteps = new();
 
         private bool TryAddState(int lastIdx, State newState, string targetKey)
         {
@@ -111,10 +111,7 @@ namespace PuzzleGame
                 ptrStr = _ptr.ToString();
             }
 
-            for (var i = _reverseSteps.Count - 1; i >= 0; i--)
-            {
-                steps.Enqueue(_reverseSteps[i]);
-            }
+            for (var i = _reverseSteps.Count - 1; i >= 0; i--) steps.Enqueue(_reverseSteps[i]);
 
             return (true, StateCache.Count);
         }
