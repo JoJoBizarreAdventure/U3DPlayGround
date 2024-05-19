@@ -6,6 +6,7 @@ namespace PuzzleGame
 {
     public class AStarSearch : Search
     {
+        private readonly Dictionary<string, int> _gnCache = new();
         private readonly StateBuilder _ptr = new();
         private readonly List<Step> _reverseSteps = new();
 
@@ -39,10 +40,11 @@ namespace PuzzleGame
                 (newState.Chessboard[currentIdx], newState.Chessboard[lastIdx]);
             var key = newState.ToString();
 
-            if (StateCache.ContainsKey(key))
+            if (StateCache.ContainsKey(key) && _gnCache[key] <= gn)
                 return false;
 
-            StateCache.Add(key, new Step(lastIdx, currentIdx));
+            StateCache[key] = new Step(lastIdx, currentIdx);
+            _gnCache[key] = gn;
             var hn = EvaluateStateH(newState);
             _stateQueue.Enqueue(new StateKey(hn * 10, gn), newState);
             return key == targetKey;
@@ -61,6 +63,7 @@ namespace PuzzleGame
             _stateQueue.Enqueue(new StateKey(0, 0), current);
             StateCache.Clear();
             StateCache.Add(currentKey, null);
+            _gnCache.Add(currentKey, 0);
 
             while (_stateQueue.Count > 0)
             {
