@@ -55,7 +55,12 @@ namespace PuzzleGame
 
             AddLog($"BFS time cost: {stopwatch.Elapsed.ToString()}");
             AddLog($"BFS states cnt: {states}");
-            if (find) return;
+            if (find)
+            {
+                AddLog($"BFS steps cnt: {_steps.Count}");
+                return;
+            }
+
             AddLog("BFS no solution");
         }
 
@@ -73,7 +78,12 @@ namespace PuzzleGame
 
             AddLog($"B-BFS time cost: {stopwatch.Elapsed.ToString()}");
             AddLog($"B-BFS states cnt: {states}");
-            if (find) return;
+            if (find)
+            {
+                AddLog($"B-BFS steps cnt: {_steps.Count}");
+                return;
+            }
+
             AddLog("B-BFS no solution");
         }
 
@@ -91,7 +101,12 @@ namespace PuzzleGame
 
             AddLog($"AStar time cost: {stopwatch.Elapsed.ToString()}");
             AddLog($"AStar states cnt: {states}");
-            if (find) return;
+            if (find)
+            {
+                AddLog($"AStar steps cnt: {_steps.Count}");
+                return;
+            }
+
             AddLog("AStar no solution");
         }
 
