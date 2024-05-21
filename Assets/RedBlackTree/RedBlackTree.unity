@@ -241,6 +241,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   treeNodePrefab: {fileID: 5280703867614436191, guid: bf00a6e68cbff0f48922bf8370a25ca8, type: 3}
+  linePrefab: {fileID: 0}
+  BlackCircle: {fileID: 2100000, guid: 12f234c1f62105d43b0f7d7beb595432, type: 2}
+  RedCircle: {fileID: 2100000, guid: 4237930939080b546838cfc210f1a892, type: 2}
 --- !u!114 &228647745
 MonoBehaviour:
   m_ObjectHideFlags: 0

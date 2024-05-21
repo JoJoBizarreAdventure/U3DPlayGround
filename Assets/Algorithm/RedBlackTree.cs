@@ -1,6 +1,5 @@
 ﻿using System;
 using DataStructure;
-using UnityEngine;
 
 namespace Algorithm
 {
@@ -54,7 +53,7 @@ namespace Algorithm
             {
                 if (newNode.Key.CompareTo(parentNode.Key) == 0)
                 {
-                    Debug.LogWarning($"RBT Key Exist in Add:{newNode.Key}");
+                    Console.WriteLine($"RBT Key Exist in Add:{newNode.Key}");
                     return null;
                 }
 
@@ -157,7 +156,7 @@ namespace Algorithm
                     }
                     else
                     {
-                        Debug.LogWarning($"RBT Key Not Exist in Remove:{key}");
+                        Console.WriteLine($"RBT Key Not Exist in Remove:{key}");
                         return null;
                     }
                 }
@@ -169,7 +168,7 @@ namespace Algorithm
                     }
                     else
                     {
-                        Debug.LogWarning($"RBT Key Not Exist in Remove:{key}");
+                        Console.WriteLine($"RBT Key Not Exist in Remove:{key}");
                         return null;
                     }
                 }
@@ -263,13 +262,9 @@ namespace Algorithm
             var parent = node.Parent;
             Action<Node> parentSetChild;
             if (node == parent.Left)
-            {
                 parentSetChild = child => { parent.SetLeft(child); };
-            }
             else
-            {
                 parentSetChild = child => { parent.SetRight(child); };
-            }
 
             // simple case - node is red
             if (Node.IsRed(node))
@@ -324,10 +319,7 @@ namespace Algorithm
                 parent.Color = Node.NodeColor.Red;
                 sister.Color = Node.NodeColor.Black;
 
-                if (_root == parent)
-                {
-                    _root = sister;
-                }
+                if (_root == parent) _root = sister;
 
                 return sister;
             }
@@ -356,10 +348,7 @@ namespace Algorithm
 
             rotateLeft(parent);
             sister.Right.Color = Node.NodeColor.Black;
-            if (_root == parent)
-            {
-                _root = sister;
-            }
+            if (_root == parent) _root = sister;
 
             return null;
         }
@@ -375,13 +364,10 @@ namespace Algorithm
 
             var doubleBlack = Remove_Internal(node);
 
-            while (doubleBlack != null)
-            {
-                doubleBlack = Remove_Adjust(doubleBlack);
-            }
+            while (doubleBlack != null) doubleBlack = Remove_Adjust(doubleBlack);
         }
 
-        protected Node GetRoot()
+        public Node GetRoot()
         {
             return _root;
         }
